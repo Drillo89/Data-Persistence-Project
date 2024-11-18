@@ -1,16 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MainManager : MonoBehaviour
 {
+    
     public Brick BrickPrefab;
     public int LineCount = 6;
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text HighScoreText;
     public GameObject GameOverText;
     
     private bool m_Started = false;
@@ -18,13 +21,22 @@ public class MainManager : MonoBehaviour
     
     private bool m_GameOver = false;
 
-    
+    private string currentPlayerName;
+
+    private string currentHSPlayerName;
+    private int currentHS;
+
+   
+
     // Start is called before the first frame update
     void Start()
     {
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
-        
+        currentPlayerName = PlayerDataHandler.Instance.GetPlayerName();
+        ScoreText.text = $"Score : {m_Points},{currentPlayerName}";
+        UpdateHSText();
+
         int[] pointCountArray = new [] {1,1,2,2,5,5};
         for (int i = 0; i < LineCount; ++i)
         {
@@ -62,15 +74,37 @@ public class MainManager : MonoBehaviour
         }
     }
 
+    private void UpdateHSText()
+    {
+        currentHS = PlayerDataHandler.Instance.GetHighScore();
+        currentHSPlayerName = PlayerDataHandler.Instance.GetHSPlayerName();
+        HighScoreText.text = $"Best Score : {currentHS} Name : {currentHSPlayerName} ";
+        
+    }
+
+    private void UpdateHighScoreData()
+    {
+        if(m_Points > PlayerDataHandler.Instance.GetHighScore())
+        {
+            PlayerDataHandler.Instance.SaveHighScore(currentPlayerName, m_Points);
+            PlayerDataHandler.Instance.LoadHighScore();
+        }
+    }
+
+    
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = $"Score : {m_Points},{currentPlayerName}";
     }
 
     public void GameOver()
     {
+        
         m_GameOver = true;
         GameOverText.SetActive(true);
+        UpdateHighScoreData();
+        UpdateHSText();
+
     }
 }
